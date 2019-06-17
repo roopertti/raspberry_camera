@@ -3,13 +3,10 @@ from sqlite3 import Error
 from datetime import date
 
 class ImageDatabase:
+    """Handles queries to sqlite database"""
 
     def __init__(self, db_path):
         self.db_path = db_path + "database.db"
-
-    '''
-    BASIC DB FUNCTIONS
-    '''
     
     def create_connection(self):
         try:
@@ -18,6 +15,8 @@ class ImageDatabase:
         except Error as e:
             print(e)
             self.conn = None
+
+    # BASIC DATABASE QUERIES
 
     def exec_query_void(self, sql):
         try:
@@ -62,9 +61,7 @@ class ImageDatabase:
         except Error as e:
             print(e)
 
-    '''
-    CUSTOM FUNCTIONS
-    '''
+    # CUSTOM FUNCTIONS
 
     def reset_tables(self):
         sql_clear_day = "DROP TABLE IF EXISTS days;"
