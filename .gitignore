@@ -1,3 +1,4 @@
 photos/*
 db/*
 config.json
+__pycache__/*
