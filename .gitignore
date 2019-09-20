@@ -2,4 +2,3 @@ images/*
 db/*
 __pycache__/*
 camera_log/*
-camera.json
