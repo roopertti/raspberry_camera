@@ -1,4 +1,5 @@
-photos/*
+images/*
 db/*
-config.json
 __pycache__/*
+camera_log/*
+camera.json

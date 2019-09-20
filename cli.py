@@ -4,33 +4,26 @@ from database import ImageDatabase
 from imagefiles import ImageFiles
 import sys
 import json
+import traceback
+from logger import Logger
 
 class Program:
     """Starting point class for camera CLI"""
     def __init__(self):
         """Initialize ImageDatabase- and ImageFiles-classes"""
 
+        
         # Set correct paths
         local_path = os.path.dirname(os.path.realpath(__file__))
         self.local_path = local_path
-        db_path = local_path + '/db/'
-        image_folder_path = local_path + '/images/'
-
-        # Create folder for db if there is no folder
-        if not os.path.exists(db_path):
-            os.makedirs(db_path)
-
-        # Create folder for images if there is no folder
-        if not os.path.exists(image_folder_path):
-            os.makedirs(image_folder_path)
 
         # Init ImageDatabase class
-        database = ImageDatabase(db_path)
+        database = ImageDatabase()
         database.create_connection()
         self.db = database
 
         # Init ImageFiles class
-        image_file_module = ImageFiles(image_folder_path)
+        image_file_module = ImageFiles()
         self.image_files = image_file_module
 
     def read_camera_settings(self):
@@ -50,9 +43,9 @@ class Program:
         Drops database tables and creates them again
         Removes all files from /images subfolder
         """
-        print("Resetting database...")
+        Logger.info("Resetting database...")
         self.db.reset_tables()
-        print("Removing image files...")
+        Logger.info("Removing image files...")
         self.image_files.delete_all_images()
 
     def capture(self):
@@ -61,16 +54,17 @@ class Program:
         Saves metadata of file to database
         """
         try:
-            print("Capturing image...")
+            print("Reading camera settings...")
             cam_settings = self.read_camera_settings()
             if cam_settings is not None:
+                print("Camera settings were succesfully read! Capturing image...")
                 capture_details = self.image_files.capture_image(cam_settings)
                 # Set reference to day-table from image-table and save image metadata
                 day_id = self.db.get_day_id()
                 self.db.save_img_metadata(day_id, capture_details["filename"], capture_details["captured"])
-                print("Success")
+                Logger.capture("Image captured! Filename: {} Captured: {}".format(capture_details["filename"], capture_details["captured"]))
         except Exception as e:
-            print(e)
+            Logger.error("Error with capture", traceback.format_exc())
 
     def stats(self):
         """Print statistics about images"""
