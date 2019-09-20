@@ -1,3 +1,7 @@
 {
-    "rotation": 0
+    "rotation": 0,
+    "resolution": [1920, 1018],
+    "brightness": 50,
+    "contrast": 30,
+    "annotate_text_size": 30
 }
