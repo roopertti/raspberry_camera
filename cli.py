@@ -54,7 +54,8 @@ class Program:
 
     def stats(self):
         """Print statistics about images"""
-        self.image_files.calc_size_of_images()
+        self.image_files.print_details()
+        print(self.image_files.fetch_image_details_api())
 
 def give_help():
     """List all arguments to command line"""

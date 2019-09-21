@@ -4,6 +4,8 @@ from datetime import datetime, date
 from time import sleep
 from logger import Logger
 import traceback
+from functools import reduce
+from PIL import Image
 
 class ImageFiles:
     def __init__(self):
@@ -66,27 +68,60 @@ class ImageFiles:
         except Exception:
             Logger.error("Error while capturing image", traceback.format_exc())
 
-    def calc_size_of_images(self):
+    def print_details(self):
         try:
-            list_of_subfolders = os.listdir(self.folder_path)
+            list_of_subfolders = self.get_full_paths_of_folder_contents()
             total_bytes = 0
             total_amount = 0
             if len(list_of_subfolders) > 0:
                 print("Image folder has footage over {} days in total.".format(len(list_of_subfolders)))
-            for subfolder in list_of_subfolders:
-                complete_subfolder_path = os.path.join(self.folder_path, subfolder)
-                list_of_images = os.listdir(complete_subfolder_path)
+            for subfolder_path in list_of_subfolders:
+                list_of_images = self.get_full_paths_of_folder_contents(subfolder_path)
                 total_amount += len(list_of_images)
-                print("{}: {} images in total".format(subfolder, len(list_of_images)))
-                for image_file in list_of_images:
-                    path = os.path.join(complete_subfolder_path, image_file)
-                    size = os.path.getsize(path)
-                    total_bytes += size
+                print("{}: {} images in total".format(os.path.basename(subfolder_path), len(list_of_images)))
+                total_bytes += self.get_subfolder_size(subfolder_path)
             total_mbs = round(total_bytes / 1024 / 1024, 1)
             print("Amount of images in total: " + str(total_amount))
             print("Total size of image files: {} MB".format(total_mbs))
         except Exception:
             Logger.error("Error while calculating image sizes", traceback.format_exc())
-    
-        
-        
+
+    def get_full_paths_of_folder_contents(self, subfolder_path = None):
+        if subfolder_path is None:
+            return [os.path.join(self.folder_path, sub_path) for sub_path in os.listdir(self.folder_path)]
+        else:
+            return [os.path.join(subfolder_path, image_path) for image_path in os.listdir(subfolder_path)]
+
+    def get_subfolder_size(self, subfolder_path):
+        image_paths = self.get_full_paths_of_folder_contents(subfolder_path)
+        image_sizes = [os.path.getsize(img) for img in image_paths]
+        subfolder_size_total = reduce(lambda x, y: x + y, image_sizes)
+        return subfolder_size_total
+
+    def get_image_details(self, image_path):
+        return { 
+            'image_size_mb': round(os.path.getsize(image_path) / 1024 / 1024, 1),
+            'filename': os.path.basename(image_path),
+            'resolution': self.read_image_resolution(image_path)
+        }
+
+    def read_image_resolution(self, image_path):
+        image = Image.open(image_path)
+        return "{}x{}".format(image.size[0], image.size[1])
+
+    def fetch_image_details_api(self):
+        response = []
+        subfolders = self.get_full_paths_of_folder_contents()
+        for subfolder in subfolders:
+            subfolder_size = round(self.get_subfolder_size(subfolder) / 1024 / 1024, 1)
+            subfolder_name = os.path.basename(subfolder)
+            image_files = self.get_full_paths_of_folder_contents(subfolder)
+            folder_obj = {
+                'folder_name': subfolder_name,
+                'folder_size_mb': subfolder_size,
+                'images': [self.get_image_details(img) for img in image_files]
+            }
+            response.append(folder_obj)
+        return response
+
+
